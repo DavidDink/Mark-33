@@ -1,2 +1,0 @@
-Adamisbad=true
-if (Adamisbad==true) print("HelloWorld")
