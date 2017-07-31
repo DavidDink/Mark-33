@@ -3,7 +3,7 @@
 """
 Created on Mon Jul 31 11:51:02 2017
 
-@author: David
+@author: David Dinkevich
 """
 
 import matplotlib.pyplot as plt
@@ -30,9 +30,9 @@ with open('iris.csv') as f:
 
 plt.plot(flowers[0])
 
-plt.xlabel('Flowers')
+plt.xlabel('Flowers (index in dataset)')
 plt.ylabel('Sepal Length')
 plt.title('Sepal Length of Flowes in Iris')
 plt.grid(True)
-plt.savefig("test.png", 500, 500)
+plt.savefig("graph.png")
 plt.show()
