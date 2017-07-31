@@ -1,0 +1,12 @@
+{
+	"time": [ 12, 30 ],
+	"temp": {
+		"room_temp": 70,
+		"outside_temp": 87,
+		"airflow_temp": 68
+	},
+	"humidity": {
+		"outside": 70,
+		"inside": 50
+	}
+}
