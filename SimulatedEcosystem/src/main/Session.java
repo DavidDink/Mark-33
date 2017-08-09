@@ -45,7 +45,8 @@ public class Session {
 		while (time < numTimes) {
 			if (Utils.withinRange(container.insideTemp(), desiredTemp, 0.1f)) {
 				container.setOutsideHumidity(random.nextFloat()*100f);
-				container.setOutsideTemp(random.nextFloat()*100f);
+//				container.setOutsideTemp(random.nextFloat()*100f);
+				container.setOutsideTemp(-2000);
 			}
 			
 			// Make time go forward
@@ -72,8 +73,8 @@ public class Session {
 			
 			if (!tempInComfortZone) {
 				final boolean tooCold = container.insideTemp() < desiredTemp;
-				final float tempDiff = (desiredTemp - container.insideTemp()) * (tooCold ? -1f : 1f);
-				System.err.println(tempDiff);
+				final float tempDiff =
+						Math.abs(desiredTemp - container.insideTemp()) * (tooCold ? 1f : -1f);
 				tempChanger.setPower(tempDiff);
 				Action.Types type = tempDiff > 0f ? Types.HEATER_ON : Types.AC_ON;
 				final float powerUsed = Math.abs(tempChanger.getPower());
@@ -94,7 +95,7 @@ public class Session {
 			// If the current inside temp is the same as the one before,
 			// the cooler/heater is not strong enough to compete with the outside
 			// temp/environment
-			if (container.insideTemp() == prevInsideTemp && !ComfortManager.isComfortableTemp(container.insideTemp())) {
+			if (container.insideTemp() == prevInsideTemp && !tempInComfortZone) {
 				System.err.println("Heater/cooler is not strong enough to compete with " +
 						"outside environment.");
 				System.exit(0);
