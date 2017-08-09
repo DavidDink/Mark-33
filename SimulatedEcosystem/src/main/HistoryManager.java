@@ -30,7 +30,7 @@ public class HistoryManager {
 	public boolean removeEntry(int timestamp) {
 		// I can do this because only the timestamp matters when
 		// comparing entries.
-		Entry e = new Entry(timestamp, null, null);
+		Entry e = new Entry(timestamp);
 		boolean removed = entries.remove(e);
 		if (removed)
 			netCost -= e.getAction().getCost();
@@ -53,14 +53,20 @@ public class HistoryManager {
 	}
 	
 	public static class Entry {
-		private final int timestamp;
-		private final Container container;
+		private int timestamp;
+		private final Session session;
 		private final Action action;
 		
-		public Entry(int timestamp, Container container, Action action) {
-			this.timestamp = timestamp;
-			this.container = container;
+		public Entry(Session sess, Action action) {
+			this.timestamp = sess.getCurrentTime();
+			this.session = sess;
 			this.action = action;
+		}
+		
+		// Constructor (hack)
+		private Entry(int timestamp) {
+			this(null, null);
+			this.timestamp = timestamp;
 		}
 		
 		@Override
@@ -80,16 +86,21 @@ public class HistoryManager {
 		
 		@Override
 		public String toString() {
-			return timestamp + "," + container.getInsideTemp() + "," +
-					container.getOutsideTemp() + "," + action;
+			Container container = session.getContainer();
+			final float comfortLevel = ComfortManager.evaluateComfortLevel(
+					container.insideTemp(), container.insideHumidity());
+			return timestamp + "," + session.getDesiredTemp() + "," +
+					container.insideTemp() + "," +
+					container.getOutsideTemp() + "," + action + "," +
+					comfortLevel + "," + action.getCost();
 		}
 
 		public int getTimestamp() {
 			return timestamp;
 		}
 		
-		public Container getContainer() {
-			return container;
+		public Session getSession() {
+			return session;
 		}
 		
 		public Action getAction() {
