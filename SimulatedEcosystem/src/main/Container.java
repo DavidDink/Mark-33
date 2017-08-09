@@ -1,15 +1,16 @@
 package main;
 
 public class Container {
-	public static final float DEFAULT_INSIDE_TEMP = 60f;
 	public static final float DEFAULT_OUTSIDE_TEMP = 40f;
+	public static final float DEFAULT_OUTSIDE_HUMIDITY = 55f;
 	
 	private float insideTemp;
 	private float insideHumidity;
 	private float outsideTemp;
 	private float outsideHumidity;
 	
-	public Container(float insideTemp, float outsideTemp, float insideHumidity, float outsideHumidity) {
+	public Container(float insideTemp, float outsideTemp,
+			float insideHumidity, float outsideHumidity) {
 		this.insideTemp = insideTemp;
 		this.insideHumidity = insideHumidity;
 		this.outsideTemp = outsideTemp;
@@ -17,18 +18,20 @@ public class Container {
 	}
 	
 	public Container(float insideTemp, float outsideTemp) {
-		this(insideTemp, outsideTemp, 0f, 0f);
+		this(insideTemp, outsideTemp, ComfortManager.IDEAL_HUMIDITY,
+				DEFAULT_OUTSIDE_HUMIDITY);
 	}
 	
 	public Container() {
-		this(DEFAULT_INSIDE_TEMP, DEFAULT_OUTSIDE_TEMP);
+		this(ComfortManager.IDEAL_TEMP, DEFAULT_OUTSIDE_TEMP);
 	}
 	
 	public Container(Container copy) {
-		this(copy.insideTemp, copy.outsideTemp, copy.insideHumidity, copy.outsideHumidity);
+		this(copy.insideTemp, copy.outsideTemp, copy.insideHumidity,
+				copy.outsideHumidity);
 	}
 
-	public float getInsideTemp() {
+	public float insideTemp() {
 		return insideTemp;
 	}
 
@@ -36,7 +39,7 @@ public class Container {
 		this.insideTemp = insideTemp;
 	}
 
-	public float getInsideHumidity() {
+	public float insideHumidity() {
 		return insideHumidity;
 	}
 
