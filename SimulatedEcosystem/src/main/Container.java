@@ -1,26 +1,31 @@
 package main;
 
 public class Container {
-	private static final float DEFAULT_INSIDE_TEMP = 60f;
+	public static final float DEFAULT_INSIDE_TEMP = 60f;
+	public static final float DEFAULT_OUTSIDE_TEMP = 40f;
 	
 	private float insideTemp;
 	private float insideHumidity;
 	private float outsideTemp;
 	private float outsideHumidity;
 	
-	public Container(float insideTemp, float insideHumidity, float outsideTemp, float outsideHumidity) {
+	public Container(float insideTemp, float outsideTemp, float insideHumidity, float outsideHumidity) {
 		this.insideTemp = insideTemp;
 		this.insideHumidity = insideHumidity;
 		this.outsideTemp = outsideTemp;
 		this.outsideHumidity = outsideHumidity;
 	}
 	
-	public Container(float insideTemp, float insideHumidity) {
-		this(insideTemp, insideHumidity, 0f, 0f);
+	public Container(float insideTemp, float outsideTemp) {
+		this(insideTemp, outsideTemp, 0f, 0f);
 	}
 	
 	public Container() {
-		this(DEFAULT_INSIDE_TEMP, 50);
+		this(DEFAULT_INSIDE_TEMP, DEFAULT_OUTSIDE_TEMP);
+	}
+	
+	public Container(Container copy) {
+		this(copy.insideTemp, copy.outsideTemp, copy.insideHumidity, copy.outsideHumidity);
 	}
 
 	public float getInsideTemp() {
