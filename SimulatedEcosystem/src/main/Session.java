@@ -1,30 +1,28 @@
 package main;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.Random;
 
 import main.Action.Types;
 
-public class Session {
+public class Session {	
 	private HistoryManager hisMan;
 	private Container container;
-	private TempChanger ac;
-	private TempChanger heater;
+	private TempChanger tempChanger;
 	
 	private float desiredTemp;
 	private float desiredHumidity;
 	
 	private int time;
 	
+	private Random random;
+	
 	public Session(Container container, float desiredTemp, float desiredHumidity) {
 		this.container = container;
 		this.desiredTemp = desiredTemp;
 		this.desiredHumidity = desiredHumidity;
-		ac = TempChanger.newAirConditioner();
-		heater = TempChanger.newHeater();
+		tempChanger = new TempChanger(-2, 2);
 		hisMan = new HistoryManager(this);
+		random = new Random();
 	}
 
 	public Session(float desiredTemp, float desiredHumidity) {
@@ -32,65 +30,79 @@ public class Session {
 	}
 	
 	public Session() {
-		this(new Container(), 75f, 50f);
+		this(new Container(), 75f, 45f);
 	}
 	
-	public void run() {
+	public Session(Session other) {
+		this(new Container(other.container), other.desiredTemp, other.desiredHumidity);
+		tempChanger = new TempChanger(other.tempChanger);
+		time = other.time;
+	}
+	
+	public void run(int numTimes) {
+		desiredTemp = ComfortManager.IDEAL_TEMP;
 		
-		desiredTemp = (float)new Random().nextInt(100);
-		
-		while (!Utils.withinRange(container.getInsideTemp(), desiredTemp, 5f)) {
+		while (time < numTimes) {
+			if (Utils.withinRange(container.insideTemp(), desiredTemp, 0.1f)) {
+				container.setOutsideHumidity(random.nextFloat()*100f);
+				container.setOutsideTemp(random.nextFloat()*100f);
+			}
+			
 			// Make time go forward
 			++time;
 			
 			// The action that will (potentially) be taken during this iteration
 			Action action;
+			// Change in temp
+			float dTemp = 0f;
+			// If the temperature is in the comfort zone
+			final boolean tempInComfortZone =
+					ComfortManager.isComfortableTemp(container.insideTemp());
 			
-			final float prevInsideTemp = container.getInsideTemp();
+			final float prevInsideTemp = container.insideTemp();
 			
 			// If the outside temperature is colder than the inside temp,
 			// or vice versa, it will have an effect on the inside temperature
 			// of the container. Let's factor this in.
 			final float outsideTempEffect = calculateOutsideTempEffect(
-					container.getInsideTemp(), container.getOutsideTemp());
+					container.insideTemp(), container.getOutsideTemp());
 
 			// Factor in outside temp effect
-			container.setInsideTemp(container.getInsideTemp() + outsideTempEffect);
+			container.setInsideTemp(container.insideTemp() + outsideTempEffect);
 			
-			// If it's too cold
-			if (container.getInsideTemp() < desiredTemp) {
-				ac.setPower(0);
-				heater.setPower(desiredTemp - container.getInsideTemp());
-				container.setInsideTemp(container.getInsideTemp() + heater.getPower());
-				// Set action (turning heater on)
-				action = new Action(Types.HEATER_ON, heater.getPower());
-			}
-			// If it's too hot
-			else if (container.getInsideTemp() > desiredTemp) {
-				heater.setPower(0);
-				final float acPower = desiredTemp - container.getInsideTemp();
-				ac.setPower(acPower);
-				// Factor in ac power
-				container.setInsideTemp(container.getInsideTemp() + ac.getPower());
-				// Set action (turning ac on)
-				action = new Action(Types.AC_ON, ac.getPower());
+			if (!tempInComfortZone) {
+				final boolean tooCold = container.insideTemp() < desiredTemp;
+				final float tempDiff = (desiredTemp - container.insideTemp()) * (tooCold ? -1f : 1f);
+				System.err.println(tempDiff);
+				tempChanger.setPower(tempDiff);
+				Action.Types type = tempDiff > 0f ? Types.HEATER_ON : Types.AC_ON;
+				final float powerUsed = Math.abs(tempChanger.getPower());
+				action = new Action(type, powerUsed);
+				dTemp += tempChanger.getPower();
 			} else {
 				// Empty action
-				action = new Action();
+				action = new Action(Action.Types.AC_OFF_HEATER_OFF, 0f);
+				tempChanger.setPower(0);
 			}
+			
+			// Apply an error calculation to simulate real-life errors
+			dTemp += generateError();
+			
+			// Update the temperature
+			container.setInsideTemp(container.insideTemp() + dTemp);
 			
 			// If the current inside temp is the same as the one before,
 			// the cooler/heater is not strong enough to compete with the outside
 			// temp/environment
-			if (container.getInsideTemp() == prevInsideTemp) {
+			if (container.insideTemp() == prevInsideTemp && !ComfortManager.isComfortableTemp(container.insideTemp())) {
 				System.err.println("Heater/cooler is not strong enough to compete with " +
 						"outside environment.");
 				System.exit(0);
 			}
 			
-			// Add this to the history manager
+//			// Add this to the history manager
 			HistoryManager.Entry entry =
-					new HistoryManager.Entry(time, new Container(container), action);
+					new HistoryManager.Entry(new Session(this), action);
 			hisMan.addEntry(entry);
 		}
 	}
@@ -101,32 +113,16 @@ public class Session {
 	 */
 	private float calculateOutsideTempEffect(float inside, float outside) {
 		float diff = outside - inside;
-		diff /= 20f;
+		diff /= 35f;
 		// Cap diff at 5
 		diff = diff > 5f ? 5f : diff < -5f ? -5f : diff;
-		if (diff > 10f) {
-			System.out.println("Something bad is happening...");
-		}
 		return diff;
 	}
 	
-	public void saveResultsToFile(String filePath) {
-		File file = new File(filePath);
-		StringBuilder builder = new StringBuilder();
-		for (HistoryManager.Entry e : hisMan.getEntries()) {
-			builder.append(e);
-			builder.append("\n");
-		}
-		PrintWriter writer = null;
-		try {
-			writer = new PrintWriter(file);
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-		}
-		writer.write(builder.toString());
-		writer.close();
+	private float generateError() {
+		return (2 * random.nextFloat() - 1)/10f;
 	}
-
+	
 	public Container getContainer() {
 		return container;
 	}
@@ -149,5 +145,13 @@ public class Session {
 
 	public void setDesiredHumidity(float desiredHumidity) {
 		this.desiredHumidity = desiredHumidity;
+	}
+	
+	public int getCurrentTime() {
+		return time;
+	}
+	
+	public HistoryManager getHistoryManager() {
+		return hisMan;
 	}
 }
