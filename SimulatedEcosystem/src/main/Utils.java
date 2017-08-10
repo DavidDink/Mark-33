@@ -17,8 +17,9 @@ public final class Utils {
 		File file = new File(path + name);
 		StringBuilder builder = new StringBuilder();
 		// Labels
-		builder.append("time,desired temp,inside temp,outside temp,state, action,comfort penalty,"
-				+ "cost,net cost\n");
+		builder.append("time,desired_temp,feel_temp,inside_temp,outside_temp,desired_humidity,"
+				+ "inside_humidity,outside_humidity,state,action,comfort_penalty,"
+				+ "cost,net_cost\n");
 		
 		// Data
 		float cost = 0f;
