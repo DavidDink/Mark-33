@@ -2,7 +2,7 @@ package main;
 
 public class Container {
 	public static final float DEFAULT_OUTSIDE_TEMP = 40f;
-	public static final float DEFAULT_OUTSIDE_HUMIDITY = 55f;
+	public static final float DEFAULT_OUTSIDE_HUMIDITY = 35f;
 	
 	private float insideTemp;
 	private float insideHumidity;
@@ -30,6 +30,17 @@ public class Container {
 		this(copy.insideTemp, copy.outsideTemp, copy.insideHumidity,
 				copy.outsideHumidity);
 	}
+	
+	public float getInsideFeelTemp() {
+		float humDiff = 0f;
+		final boolean humAboveMax = insideHumidity > ComfortManager.MAX_COMFORTABLE_HUMIDITY;
+		if (!ComfortManager.isComfortableHumidity(insideHumidity)) {
+			humDiff = humAboveMax ? insideHumidity-ComfortManager.MAX_COMFORTABLE_HUMIDITY : 
+						insideHumidity-ComfortManager.MIN_COMFORTABLE_HUMIDITY;
+			return insideTemp + humDiff/3f;
+		}
+		return insideTemp;
+	}
 
 	public float insideTemp() {
 		return insideTemp;
@@ -47,7 +58,7 @@ public class Container {
 		this.insideHumidity = insideHumidity;
 	}
 
-	public float getOutsideTemp() {
+	public float outsideTemp() {
 		return outsideTemp;
 	}
 
@@ -55,7 +66,7 @@ public class Container {
 		this.outsideTemp = outsideTemp;
 	}
 
-	public float getOutsideHumidity() {
+	public float outsideHumidity() {
 		return outsideHumidity;
 	}
 
