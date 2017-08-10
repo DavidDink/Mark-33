@@ -11,7 +11,7 @@ public final class Utils {
 		return Math.abs(desiredVal - val) <= acceptableOffset;
 	}
 	
-	public static void saveResultsToFile(Session session) {
+	public static void saveToFile(Session session) {
 		String path = "/Users/David/Desktop/";
 		String name = "data" + System.currentTimeMillis() + ".csv";
 		File file = new File(path + name);
