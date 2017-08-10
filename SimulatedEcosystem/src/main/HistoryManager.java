@@ -53,9 +53,9 @@ public class HistoryManager {
 	public static class Entry {
 		private int timestamp;
 		private final Session session;
-		private final Action action;
+		private final ActionMap action;
 		
-		public Entry(Session sess, Action action) {
+		public Entry(Session sess, ActionMap action) {
 			this.timestamp = sess.getCurrentTime();
 			this.session = sess;
 			this.action = action;
@@ -89,8 +89,8 @@ public class HistoryManager {
 					container.insideTemp(), container.insideHumidity());
 			return timestamp + "," + ComfortManager.IDEAL_TEMP + "," +
 					container.insideTemp() + "," +
-					container.getOutsideTemp() + "," + action + "," +
-					comfortLevel + "," + action.getCost();
+					container.getOutsideTemp() + "," + action.getState() + "," +
+					action.getAction() + "," + comfortLevel + "," + action.getCost();
 		}
 
 		public int getTimestamp() {
@@ -101,7 +101,7 @@ public class HistoryManager {
 			return session;
 		}
 		
-		public Action getAction() {
+		public ActionMap getAction() {
 			return action;
 		}
 		
