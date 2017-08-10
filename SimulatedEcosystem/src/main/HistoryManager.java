@@ -5,13 +5,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class HistoryManager {
-	private Session session;
 	private List<Entry> entries;
 	private float netCost;
 	
-	public HistoryManager(Session session) {
+	public HistoryManager() {
 		entries = new ArrayList<>();
-		this.session = session;
 	}
 	
 	public void addEntry(Entry entry) {
@@ -46,7 +44,7 @@ public class HistoryManager {
 	}
 	
 	public void printData() {
-		System.out.print("Desired inside temp: " + session.getDesiredTemp());
+		System.out.print("Desired inside temp: " + ComfortManager.IDEAL_TEMP);
 		System.out.println("  Net Cost: " + netCost);
 		System.out.println("-----------------");
 		entries.forEach(System.out::println);
@@ -89,7 +87,7 @@ public class HistoryManager {
 			Container container = session.getContainer();
 			final float comfortLevel = ComfortManager.evaluateComfortLevel(
 					container.insideTemp(), container.insideHumidity());
-			return timestamp + "," + session.getDesiredTemp() + "," +
+			return timestamp + "," + ComfortManager.IDEAL_TEMP + "," +
 					container.insideTemp() + "," +
 					container.getOutsideTemp() + "," + action + "," +
 					comfortLevel + "," + action.getCost();
