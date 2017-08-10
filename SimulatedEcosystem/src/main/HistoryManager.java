@@ -55,16 +55,15 @@ public class HistoryManager {
 		private final Session session;
 		private final ActionMap action;
 		
-		public Entry(Session sess, ActionMap action) {
-			this.timestamp = sess.getCurrentTime();
+		public Entry(int timestamp, Session sess, ActionMap action) {
+			this.timestamp = timestamp;
 			this.session = sess;
 			this.action = action;
 		}
 		
 		// Constructor (hack)
 		private Entry(int timestamp) {
-			this(null, null);
-			this.timestamp = timestamp;
+			this(timestamp, null, null);
 		}
 		
 		@Override
@@ -88,8 +87,10 @@ public class HistoryManager {
 			final float comfortLevel = ComfortManager.evaluateComfortLevel(
 					container.insideTemp(), container.insideHumidity());
 			return timestamp + "," + ComfortManager.IDEAL_TEMP + "," +
-					container.insideTemp() + "," +
-					container.getOutsideTemp() + "," + action.getState() + "," +
+					container.getInsideFeelTemp() + "," + container.insideTemp() + "," +
+					container.outsideTemp() + "," + ComfortManager.IDEAL_HUMIDITY +
+					"," + container.insideHumidity() + "," + container.outsideHumidity()
+					+ "," + action.getState() + "," +
 					action.getAction() + "," + comfortLevel + "," + action.getCost();
 		}
 
