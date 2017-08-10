@@ -1,20 +1,20 @@
 package main;
 
-public class TempChanger {
+public class EnvAdjuster {
 	private float minPower, maxPower;
 	private float power;
 	
-	public TempChanger(float minPower, float maxPower) {
+	public EnvAdjuster(float minPower, float maxPower) {
 		this.minPower = minPower;
 		this.maxPower = maxPower;
 	}
 	
-	public TempChanger(TempChanger other) {
+	public EnvAdjuster(EnvAdjuster other) {
 		this(other.minPower, other.maxPower);
 		power = other.power;
 	}
 	
-	public TempChanger() {
+	public EnvAdjuster() {
 		this(-2f, 2f);
 	}
 	
