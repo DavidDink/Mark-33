@@ -2,58 +2,38 @@ package main;
 
 import java.util.Random;
 
-import main.Action.Types;
+import main.ActionMap.Types;
 
 public class Session {	
 	private HistoryManager hisMan;
 	private Container container;
 	private TempChanger tempChanger;
-	
-	private float desiredTemp;
-	private float desiredHumidity;
-	
+		
 	private int time;
 	
 	private Random random;
 	
-	public Session(Container container, float desiredTemp, float desiredHumidity) {
-		this.container = container;
-		this.desiredTemp = desiredTemp;
-		this.desiredHumidity = desiredHumidity;
-		tempChanger = new TempChanger(-2, 2);
-		hisMan = new HistoryManager(this);
-		random = new Random();
-	}
-
-	public Session(float desiredTemp, float desiredHumidity) {
-		this(new Container(), desiredTemp, desiredHumidity);
-	}
-	
 	public Session() {
-		this(new Container(), 75f, 45f);
+		random = new Random();
 	}
 	
 	public Session(Session other) {
-		this(new Container(other.container), other.desiredTemp, other.desiredHumidity);
+		container = new Container(other.container);
 		tempChanger = new TempChanger(other.tempChanger);
 		time = other.time;
+		// HisotryManager is not copied
 	}
 	
-	public void run(int numTimes) {
-		desiredTemp = ComfortManager.IDEAL_TEMP;
-		
+	public HistoryManager run(int numTimes) {
+		clear();
+		final float desiredTemp = ComfortManager.IDEAL_TEMP;
+		container.setOutsideTemp(130);
 		while (time < numTimes) {
-			if (Utils.withinRange(container.insideTemp(), desiredTemp, 0.1f)) {
-				container.setOutsideHumidity(random.nextFloat()*100f);
-//				container.setOutsideTemp(random.nextFloat()*100f);
-				container.setOutsideTemp(-2000);
-			}
-			
 			// Make time go forward
 			++time;
 			
 			// The action that will (potentially) be taken during this iteration
-			Action action;
+			ActionMap actionMap;
 			// Change in temp
 			float dTemp = 0f;
 			// If the temperature is in the comfort zone
@@ -72,17 +52,24 @@ public class Session {
 			container.setInsideTemp(container.insideTemp() + outsideTempEffect);
 			
 			if (!tempInComfortZone) {
+				// If the inside of the container is colder than the desired temp
 				final boolean tooCold = container.insideTemp() < desiredTemp;
+				// Measure the discrepancy between inside temp and desired temp
 				final float tempDiff =
 						Math.abs(desiredTemp - container.insideTemp()) * (tooCold ? 1f : -1f);
+				// Get whether the AC is currently on
+				final boolean acOnPreviously = tempChanger.getPower() < 0f;
+				// Update the temp changer to the newly calculated power
 				tempChanger.setPower(tempDiff);
-				Action.Types type = tempDiff > 0f ? Types.HEATER_ON : Types.AC_ON;
+				final boolean acOnNow = tempChanger.getPower() < 0f;
+				ActionMap.Types state = tempDiff > 0f ? Types.HEATER_ON : Types.AC_ON;
+				ActionMap.Types action = !acOnPreviously && acOnNow ? Types.AC_ON : Types.NONE;
 				final float powerUsed = Math.abs(tempChanger.getPower());
-				action = new Action(type, powerUsed);
+				actionMap = new ActionMap(action, state, powerUsed);
 				dTemp += tempChanger.getPower();
 			} else {
 				// Empty action
-				action = new Action(Action.Types.AC_OFF_HEATER_OFF, 0f);
+				actionMap = new ActionMap(ActionMap.Types.NONE, ActionMap.Types.NONE, 0f);
 				tempChanger.setPower(0);
 			}
 			
@@ -96,16 +83,17 @@ public class Session {
 			// the cooler/heater is not strong enough to compete with the outside
 			// temp/environment
 			if (container.insideTemp() == prevInsideTemp && !tempInComfortZone) {
-				System.err.println("Heater/cooler is not strong enough to compete with " +
+				System.err.println("TempChanger is not strong enough to compete with " +
 						"outside environment.");
 				System.exit(0);
 			}
 			
 //			// Add this to the history manager
 			HistoryManager.Entry entry =
-					new HistoryManager.Entry(new Session(this), action);
+					new HistoryManager.Entry(new Session(this), actionMap);
 			hisMan.addEntry(entry);
 		}
+		return hisMan;
 	}
 	
 	/**
@@ -124,28 +112,15 @@ public class Session {
 		return (2 * random.nextFloat() - 1)/10f;
 	}
 	
+	public void clear() {
+		container = new Container();
+		tempChanger = new TempChanger();
+		hisMan = new HistoryManager();
+		time = 0;
+	}
+	
 	public Container getContainer() {
 		return container;
-	}
-
-	public void setContainer(Container container) {
-		this.container = container;
-	}
-
-	public float getDesiredTemp() {
-		return desiredTemp;
-	}
-
-	public void setDesiredTemp(float desiredTemp) {
-		this.desiredTemp = desiredTemp;
-	}
-
-	public float getDesiredHumidity() {
-		return desiredHumidity;
-	}
-
-	public void setDesiredHumidity(float desiredHumidity) {
-		this.desiredHumidity = desiredHumidity;
 	}
 	
 	public int getCurrentTime() {
