@@ -49,6 +49,10 @@ public class Container {
 	public void setInsideTemp(float insideTemp) {
 		this.insideTemp = insideTemp;
 	}
+	
+	public void adjustInsideTemp(float adj) {
+		setInsideTemp(insideTemp + adj);
+	}
 
 	public float insideHumidity() {
 		return insideHumidity;
@@ -56,6 +60,10 @@ public class Container {
 
 	public void setInsideHumidity(float insideHumidity) {
 		this.insideHumidity = insideHumidity;
+	}
+	
+	public void adjustInsideHumidity(float adj) {
+		setInsideHumidity(insideHumidity + adj);
 	}
 
 	public float outsideTemp() {
@@ -65,6 +73,10 @@ public class Container {
 	public void setOutsideTemp(float outsideTemp) {
 		this.outsideTemp = outsideTemp;
 	}
+	
+	public void adjustOutsideTemp(float adj) {
+		setOutsideTemp(outsideTemp + adj);
+	}
 
 	public float outsideHumidity() {
 		return outsideHumidity;
@@ -72,5 +84,9 @@ public class Container {
 
 	public void setOutsideHumidity(float outsideHumidity) {
 		this.outsideHumidity = outsideHumidity;
+	}
+	
+	public void adjustOutsideHumidity(float adj) {
+		setOutsideHumidity(outsideHumidity + adj);
 	}
 }

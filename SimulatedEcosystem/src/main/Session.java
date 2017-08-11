@@ -2,15 +2,13 @@ package main;
 
 import java.util.Random;
 
-import main.ActionMap.Types;
+import main.HistoryManager.Entry;
 
 public class Session {	
 	private HistoryManager hisMan;
 	private Container container;
-	private TempChanger tempChanger;
-		
-	private int time;
-	
+	private EnvAdjuster tempChanger;
+	private EnvAdjuster humChanger;
 	private Random random;
 	
 	public Session() {
@@ -19,115 +17,100 @@ public class Session {
 	
 	public Session(Session other) {
 		container = new Container(other.container);
-		tempChanger = new TempChanger(other.tempChanger);
-		time = other.time;
+		tempChanger = new EnvAdjuster(other.tempChanger);
+		humChanger = new EnvAdjuster(other.humChanger);
 		// HisotryManager is not copied
 	}
 	
 	public HistoryManager run(int numTimes) {
 		clear();
-		final float desiredTemp = ComfortManager.IDEAL_TEMP;
-		container.setOutsideTemp(130);
-		while (time < numTimes) {
-			// Make time go forward
-			++time;
+		Lester lester = new Lester(this);
+		
+		// The action taken
+		ActionMap prevActions = new ActionMap();
+		ActionMap actions = new ActionMap();
+
+		for (int time = 1; time <= numTimes; time++) {
+			// Update record of previous actions
+			prevActions.set(actions);
 			
-			// The action that will (potentially) be taken during this iteration
-			ActionMap actionMap;
-			// Change in temp
-			float dTemp = 0f;
-			// If the temperature is in the comfort zone
-			final boolean tempInComfortZone =
-					ComfortManager.isComfortableTemp(container.insideTemp());
-			
-			final float prevInsideTemp = container.insideTemp();
+			// Update the temperature
+			container.adjustInsideTemp(tempChanger.getPower());
+			// Update the humidity
+			container.adjustInsideHumidity(humChanger.getPower());
 			
 			// If the outside temperature is colder than the inside temp,
 			// or vice versa, it will have an effect on the inside temperature
 			// of the container. Let's factor this in.
-			final float outsideTempEffect = calculateOutsideTempEffect(
-					container.insideTemp(), container.getOutsideTemp());
+			final float outsideTempEffect = calculateEnvEffect(
+					container.insideTemp(), container.outsideTemp(), 35f);
+			// Same as above, but for humidity
+			final float outsideHumEffect = calculateEnvEffect(
+					container.insideHumidity(), container.outsideHumidity(), 40f);
 
 			// Factor in outside temp effect
-			container.setInsideTemp(container.insideTemp() + outsideTempEffect);
+			container.adjustInsideTemp(outsideTempEffect);
+			// Factor in outside humidity effect
+			container.adjustInsideHumidity(outsideHumEffect);
 			
-			if (!tempInComfortZone) {
-				// If the inside of the container is colder than the desired temp
-				final boolean tooCold = container.insideTemp() < desiredTemp;
-				// Measure the discrepancy between inside temp and desired temp
-				final float tempDiff =
-						Math.abs(desiredTemp - container.insideTemp()) * (tooCold ? 1f : -1f);
-				// Get whether the AC is currently on
-				final boolean acOnPreviously = tempChanger.getPower() < 0f;
-				// Update the temp changer to the newly calculated power
-				tempChanger.setPower(tempDiff);
-				final boolean acOnNow = tempChanger.getPower() < 0f;
-				ActionMap.Types state = tempDiff > 0f ? Types.HEATER_ON : Types.AC_ON;
-				ActionMap.Types action = !acOnPreviously && acOnNow ? Types.AC_ON : Types.NONE;
-				final float powerUsed = Math.abs(tempChanger.getPower());
-				actionMap = new ActionMap(action, state, powerUsed);
-				dTemp += tempChanger.getPower();
-			} else {
-				// Empty action
-				actionMap = new ActionMap(ActionMap.Types.NONE, ActionMap.Types.NONE, 0f);
-				tempChanger.setPower(0);
-			}
+			// Add error to temperature and humidity reading
+			container.adjustInsideTemp(generateError());
+			container.adjustInsideHumidity(generateError());
 			
-			// Apply an error calculation to simulate real-life errors
-			dTemp += generateError();
+			// Ask engine for next action
+			actions.set(lester.makeDecision());
+			// Apply this action
+			tempChanger.setPower(actions.getTemperatureAction());
+			humChanger.setPower(actions.getHumidityAction());
+			// TODO: make this more concise (constraints)
+			actions.setTemperatureAction(tempChanger.getPower());
+			actions.setHumidityAction(humChanger.getPower());
 			
-			// Update the temperature
-			container.setInsideTemp(container.insideTemp() + dTemp);
-			
-			// If the current inside temp is the same as the one before,
-			// the cooler/heater is not strong enough to compete with the outside
-			// temp/environment
-			if (container.insideTemp() == prevInsideTemp && !tempInComfortZone) {
-				System.err.println("TempChanger is not strong enough to compete with " +
-						"outside environment.");
-				System.exit(0);
-			}
-			
-//			// Add this to the history manager
-			HistoryManager.Entry entry =
-					new HistoryManager.Entry(new Session(this), actionMap);
+			// Add this to the history manager
+			HistoryManager.Entry entry = new Entry(time, new Session(this), 
+					// State = previous actions
+					new ActionMap(prevActions), new ActionMap(actions));
 			hisMan.addEntry(entry);
 		}
 		return hisMan;
 	}
 	
 	/**
-	 * How to calculate how much effect the outside temperature has on the inside
+	 * Calculate how much effect the outside temperature has on the inside
 	 * temperature of a container.
 	 */
-	private float calculateOutsideTempEffect(float inside, float outside) {
+	private float calculateEnvEffect(float inside, float outside, float divisor) {
 		float diff = outside - inside;
-		diff /= 35f;
+		diff /= divisor;
 		// Cap diff at 5
 		diff = diff > 5f ? 5f : diff < -5f ? -5f : diff;
 		return diff;
 	}
 	
 	private float generateError() {
-		return (2 * random.nextFloat() - 1)/10f;
+		return (2f * random.nextFloat() - 1f)/10f;
 	}
 	
 	public void clear() {
 		container = new Container();
-		tempChanger = new TempChanger();
+		tempChanger = new EnvAdjuster();
+		humChanger = new EnvAdjuster();
 		hisMan = new HistoryManager();
-		time = 0;
 	}
 	
 	public Container getContainer() {
 		return container;
 	}
 	
-	public int getCurrentTime() {
-		return time;
-	}
-	
 	public HistoryManager getHistoryManager() {
 		return hisMan;
+	}
+
+	public EnvAdjuster getTempChanger() {
+		return tempChanger;
+	}
+
+	public EnvAdjuster getHumChanger() {
+		return humChanger;
 	}
 }

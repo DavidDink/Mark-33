@@ -18,15 +18,15 @@ public final class Utils {
 		StringBuilder builder = new StringBuilder();
 		// Labels
 		builder.append("time,desired_temp,feel_temp,inside_temp,outside_temp,desired_humidity,"
-				+ "inside_humidity,outside_humidity,state,action,comfort_penalty,"
-				+ "cost,net_cost\n");
+				+ "inside_humidity,outside_humidity,temp_state,temp_action,humidity_state,"
+				+ "humidity_action,comfort_penalty,cost,net_cost\n");
 		
 		// Data
 		float cost = 0f;
 		for (HistoryManager.Entry e : session.getHistoryManager().getEntries()) {
 			builder.append(e);
 			builder.append(",");
-			builder.append(cost += e.getAction().getCost());
+			builder.append(cost += e.getCost());
 			builder.append("\n");
 		}
 		PrintWriter writer = null;

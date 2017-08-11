@@ -14,7 +14,7 @@ public class HistoryManager {
 	
 	public void addEntry(Entry entry) {
 		entries.add(entry);
-		netCost += entry.getAction().getCost();
+//		netCost += entry.getAction().getCost();
 	}
 	
 	public Entry getEntry(int timestamp) {
@@ -31,7 +31,7 @@ public class HistoryManager {
 		Entry e = new Entry(timestamp);
 		boolean removed = entries.remove(e);
 		if (removed)
-			netCost -= e.getAction().getCost();
+			netCost -= e.getCost();
 		return removed;
 	}
 	
@@ -53,17 +53,18 @@ public class HistoryManager {
 	public static class Entry {
 		private int timestamp;
 		private final Session session;
-		private final ActionMap action;
+		private final ActionMap action, state;
 		
-		public Entry(int timestamp, Session sess, ActionMap action) {
+		public Entry(int timestamp, Session sess, ActionMap state, ActionMap action) {
 			this.timestamp = timestamp;
 			this.session = sess;
 			this.action = action;
+			this.state = state;
 		}
 		
 		// Constructor (hack)
 		private Entry(int timestamp) {
-			this(timestamp, null, null);
+			this(timestamp, null, null, null);
 		}
 		
 		@Override
@@ -90,8 +91,14 @@ public class HistoryManager {
 					container.getInsideFeelTemp() + "," + container.insideTemp() + "," +
 					container.outsideTemp() + "," + ComfortManager.IDEAL_HUMIDITY +
 					"," + container.insideHumidity() + "," + container.outsideHumidity()
-					+ "," + action.getState() + "," +
-					action.getAction() + "," + comfortLevel + "," + action.getCost();
+					+ "," + state.getTemperatureAction() + "," +
+					action.getTemperatureAction() + "," + state.getHumidityAction() + "," +
+					action.getHumidityAction() + "," + comfortLevel + "," + getCost();
+		}
+		
+		public float getCost() {
+			return Math.abs(state.getTemperatureAction()) + 
+					Math.abs(state.getHumidityAction());
 		}
 
 		public int getTimestamp() {
@@ -106,5 +113,8 @@ public class HistoryManager {
 			return action;
 		}
 		
+		public ActionMap getState() {
+			return state;
+		}
 	}
 }
