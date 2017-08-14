@@ -1,17 +1,13 @@
 package main;
 
-public class Lester {
-	private Session session;
-	
-	public Lester(Session session) {
-		this.session = session;
-	}
-	
-	public ActionMap makeDecision() {		
+public class Lester implements Engine {
+	@Override
+	public ActionMap makeDecision(Session session) {		
 		Container c = session.getContainer();
 		final float dTemp = controlEnv(c.getInsideFeelTemp(),
 				ComfortManager.IDEAL_TEMP,
 				ComfortManager.isComfortableTemp(c.getInsideFeelTemp()));
+		
 		final float dHumidity = controlEnv(c.insideHumidity(),
 				ComfortManager.IDEAL_HUMIDITY,
 				ComfortManager.isComfortableHumidity(c.insideHumidity()));
@@ -37,13 +33,5 @@ public class Lester {
 			// No change needed
 			return 0f;
 		}
-	}
-
-	public Session getSession() {
-		return session;
-	}
-	
-	public void setSession(Session session) {
-		this.session = session;
 	}
 }

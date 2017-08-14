@@ -3,7 +3,7 @@ package main;
 public final class ComfortManager {
 	public static final float IDEAL_COMFORT = 0f;
 	public static final float IDEAL_HUMIDITY = 45f;
-	public static final float IDEAL_TEMP = 75f;
+	public static final float IDEAL_TEMP = 73f;
 	public static final float ALLOWED_HUMIDITY_RANGE = 5f;
 	public static final float ALLOWED_TEMP_RANGE = 3f;
 	public static final float MIN_COMFORTABLE_TEMP = IDEAL_TEMP - ALLOWED_TEMP_RANGE;

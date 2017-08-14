@@ -32,14 +32,8 @@ public class Container {
 	}
 	
 	public float getInsideFeelTemp() {
-		float humDiff = 0f;
-		final boolean humAboveMax = insideHumidity > ComfortManager.MAX_COMFORTABLE_HUMIDITY;
-		if (!ComfortManager.isComfortableHumidity(insideHumidity)) {
-			humDiff = humAboveMax ? insideHumidity-ComfortManager.MAX_COMFORTABLE_HUMIDITY : 
-						insideHumidity-ComfortManager.MIN_COMFORTABLE_HUMIDITY;
-			return insideTemp + humDiff/3f;
-		}
-		return insideTemp;
+		final float humDiff = ComfortManager.IDEAL_HUMIDITY - insideHumidity;
+		return insideTemp - humDiff/3f;
 	}
 
 	public float insideTemp() {

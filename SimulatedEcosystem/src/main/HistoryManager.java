@@ -5,38 +5,38 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class HistoryManager {
-	private List<Entry> entries;
+	private List<Interval> intervals;
 	private float netCost;
 	
 	public HistoryManager() {
-		entries = new ArrayList<>();
+		intervals = new ArrayList<>();
 	}
 	
-	public void addEntry(Entry entry) {
-		entries.add(entry);
-//		netCost += entry.getAction().getCost();
+	public void addInterval(Interval Interval) {
+		intervals.add(Interval);
+		netCost += Interval.getCost();
 	}
 	
-	public Entry getEntry(int timestamp) {
-		for (Entry e : entries) {
+	public Interval getInterval(int timestamp) {
+		for (Interval e : intervals) {
 			if (e.getTimestamp() == timestamp)
 				return e;
 		}
 		return null;
 	}
 	
-	public boolean removeEntry(int timestamp) {
+	public boolean removeInterval(int timestamp) {
 		// I can do this because only the timestamp matters when
-		// comparing entries.
-		Entry e = new Entry(timestamp);
-		boolean removed = entries.remove(e);
+		// comparing intervals.
+		Interval e = new Interval(timestamp);
+		boolean removed = intervals.remove(e);
 		if (removed)
 			netCost -= e.getCost();
 		return removed;
 	}
 	
-	public List<Entry> getEntries() {
-		return Collections.unmodifiableList(entries);
+	public List<Interval> getIntervals() {
+		return Collections.unmodifiableList(intervals);
 	}
 	
 	public float getNetCost() {
@@ -47,74 +47,6 @@ public class HistoryManager {
 		System.out.print("Desired inside temp: " + ComfortManager.IDEAL_TEMP);
 		System.out.println("  Net Cost: " + netCost);
 		System.out.println("-----------------");
-		entries.forEach(System.out::println);
-	}
-	
-	public static class Entry {
-		private int timestamp;
-		private final Session session;
-		private final ActionMap action, state;
-		
-		public Entry(int timestamp, Session sess, ActionMap state, ActionMap action) {
-			this.timestamp = timestamp;
-			this.session = sess;
-			this.action = action;
-			this.state = state;
-		}
-		
-		// Constructor (hack)
-		private Entry(int timestamp) {
-			this(timestamp, null, null, null);
-		}
-		
-		@Override
-		public boolean equals(Object o) {
-			if (o == this)
-				return true;
-			if (!(o instanceof Entry))
-				return false;
-			Entry other = (Entry)o;
-			return other.timestamp == timestamp;
-		}
-		
-		@Override
-		public int hashCode() {
-			return timestamp;
-		}
-		
-		@Override
-		public String toString() {
-			Container container = session.getContainer();
-			final float comfortLevel = ComfortManager.evaluateComfortLevel(
-					container.insideTemp(), container.insideHumidity());
-			return timestamp + "," + ComfortManager.IDEAL_TEMP + "," +
-					container.getInsideFeelTemp() + "," + container.insideTemp() + "," +
-					container.outsideTemp() + "," + ComfortManager.IDEAL_HUMIDITY +
-					"," + container.insideHumidity() + "," + container.outsideHumidity()
-					+ "," + state.getTemperatureAction() + "," +
-					action.getTemperatureAction() + "," + state.getHumidityAction() + "," +
-					action.getHumidityAction() + "," + comfortLevel + "," + getCost();
-		}
-		
-		public float getCost() {
-			return Math.abs(state.getTemperatureAction()) + 
-					Math.abs(state.getHumidityAction());
-		}
-
-		public int getTimestamp() {
-			return timestamp;
-		}
-		
-		public Session getSession() {
-			return session;
-		}
-		
-		public ActionMap getAction() {
-			return action;
-		}
-		
-		public ActionMap getState() {
-			return state;
-		}
+		intervals.forEach(System.out::println);
 	}
 }
